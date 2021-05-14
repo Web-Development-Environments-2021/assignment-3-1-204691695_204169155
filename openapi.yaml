@@ -1,0 +1,241 @@
+---
+openapi: 3.0.0
+info:
+  title: Football Association Management System API
+  description: Tom & Asi -vFootball Association Management System  API
+  contact:
+    name: Tom & Asi
+    url: https://in.bgu.ac.il/en/Pages/default.aspx
+  version: "1"
+servers:
+- url: https://virtserver.swaggerhub.com/Tom_n_Asi/FAMS_API/1
+  description: SwaggerHub API Auto Mocking
+- url: https://localhost:3000
+  description: Local API Auto Mocking
+tags:
+- name: auth
+  description: User authentication - login and register
+- name: user
+  description: All the user's personal info
+- name: search
+  description: search for players/teams and coaches by name
+- name: player
+  description: get all relavent player information
+- name: team
+  description: get all relavent team information
+paths:
+  /auth/Register:
+    post:
+      tags:
+      - auth
+      summary: Creates new user in the system
+      description: get all relavant user details for registeration
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Register'
+      responses:
+        "201":
+          description: User created
+        "400":
+          description: invalid syntax - input rules dont validate
+        "409":
+          description: Username taken
+  /auth/Login:
+    post:
+      tags:
+      - auth
+      summary: Login user to the system
+      description: get username and password from user and commit login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+        required: true
+      responses:
+        "200":
+          description: Successfully authenticated
+          headers:
+            Set-Cookie:
+              style: simple
+              explode: false
+              schema:
+                type: string
+                example: session=8dsf8esaf65c1xdf3ax2asdcz3asd
+        "401":
+          description: Authentication failed
+        "404":
+          description: Username doesn't exist
+  /auth/Logout:
+    post:
+      tags:
+      - auth
+      summary: Logout user
+      description: logout theuser from the site and delete his session
+      responses:
+        "200":
+          description: loged out succefult
+      security:
+      - cookieAuth: []
+  /search/player/{query}:
+    get:
+      tags:
+      - search
+      summary: Search for players by name in the sportmonks.com api
+      parameters:
+      - name: query
+        in: path
+        description: query name
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      - name: PlayerPos
+        in: query
+        required: false
+        style: form
+        explode: true
+        schema:
+          $ref: '#/components/schemas/PlayerPos'
+      responses:
+        "200":
+          description: all the relevant data about the given query
+  /search/team/{query}:
+    get:
+      tags:
+      - search
+      summary: Search for team by name in the sportmonks.com api
+      parameters:
+      - name: query
+        in: path
+        description: query name
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: all the relevant data about the given query
+  /player/{playerID}:
+    get:
+      tags:
+      - player
+      summary: get leauge inforamtion by ID
+      parameters:
+      - name: playerID
+        in: path
+        description: query name
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: all the relevant data about the player is displayed
+  /team/{teamID}:
+    get:
+      tags:
+      - team
+      summary: get leauge inforamtion by ID
+      parameters:
+      - name: teamID
+        in: path
+        description: query name
+        required: true
+        style: simple
+        explode: false
+        schema:
+          type: string
+      responses:
+        "200":
+          description: all the relevant data about the team is displayed
+components:
+  schemas:
+    Register:
+      type: object
+      properties:
+        username:
+          $ref: '#/components/schemas/UserName'
+        fname:
+          type: string
+          description: user's first name
+          example: Asaf
+        lname:
+          type: string
+          description: user's last name
+          example: Salomon
+        contry:
+          type: string
+          description: contry listed in 'https://restcountries.eu/rest/v2/all'
+          example: Israel
+        password:
+          $ref: '#/components/schemas/Password'
+        Confirmpassword:
+          $ref: '#/components/schemas/ConfirmPassword'
+        email:
+          type: string
+          description: user's email.
+          example: example@email.com
+        profilePic:
+          type: string
+          description: url of picture
+          example: https://www.akamai.com/us/en/multimedia/images/video/akamai-api-video-thumbnail.jpg?imwidth=1366
+      description: all data needed to create new user
+    Login:
+      type: object
+      properties:
+        username:
+          $ref: '#/components/schemas/UserName'
+        password:
+          $ref: '#/components/schemas/Password'
+      description: all data needed to login a user to the system
+    UserName:
+      maxLength: 8
+      minLength: 3
+      pattern: ^[A-Za-z]+$
+      type: string
+      description: user's username. english letters only
+      example: TomAsi
+    Password:
+      maxLength: 10
+      minLength: 5
+      pattern: ^(?=.\d)(?=.?[#?!@$%^&*-]).{5,10}$
+      type: string
+      description: user's password, atleast 1 digit & 1 capital letter and one special charachter.
+      example: Password12
+    ConfirmPassword:
+      maxLength: 10
+      minLength: 5
+      pattern: ^(?=.\d)(?=.?[#?!@$%^&*-]).{5,10}$
+      type: string
+      description: user's confirm password. must be identical
+      example: Password12
+    TeamName:
+      type: string
+      enum:
+      - Barca
+      - RealMadrid
+      - etc
+    PlayerPos:
+      type: string
+      enum:
+      - GoalKepper
+      - Winger
+      - Centre
+      - Defender
+    Schema:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      name: session
+      in: cookie
